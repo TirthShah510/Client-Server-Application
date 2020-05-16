@@ -87,4 +87,5 @@ option = printMenu()
 while 0 < option < 8:
     data = switchMenu(option)
     clientSocket.send(bytes(str(option) + "|" + data, 'utf-8'))
+    print(clientSocket.recv(4096).decode())
     option = printMenu()
