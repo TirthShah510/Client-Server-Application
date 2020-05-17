@@ -10,123 +10,87 @@ print("Waiting for Client Connection")
 
 readFile = open('data.txt', 'r')
 Lines = readFile.readlines()
-print("Database Loading Completed")
+dictRecord = {}
+for line in Lines:
+    listLine = line.split('|')
+    if listLine[0]:
+        dictRecord[listLine[0]] = line[(len(listLine[0]) + 1):].strip()
+
+print(dictRecord)
 
 
 def customerExists():
-    for line in Lines:
-        listLine = line.split('|')
-        if listLine[0].strip() == listData[1].strip():
-            return True
+    if listData[1] in dictRecord:
+        return True
     return False
 
 
-def findCustomer():
-    for line in Lines:
-        if line.startswith(listData[1]):
-            clientSocket.send(bytes(line, 'utf-8'))
-            break
-    clientSocket.send(bytes("Customer not found", 'utf-8'))
+def findCustomer(argument):
+
+    if listData[1] in dictRecord:
+        record = listData[1] + "|" + dictRecord[listData[1]]
+        clientSocket.send(bytes(record, 'utf-8'))
+    else:
+        clientSocket.send(bytes("Customer not found", 'utf-8'))
 
 
-def addCustomer():
-    appendFile = open('data.txt', 'a+')
+def addCustomer(argument):
 
     if customerExists():
         clientSocket.send(bytes("Customer already exists", 'utf-8'))
     else:
         record = ""
-        i = 1
+        i = 2
         while i < len(listData) - 1:
             record = record + listData[i] + "|"
             i += 1
         record += listData[len(listData) - 1]
-        record = "\n" + record
-        appendFile.write(record)
+        dictRecord[listData[1]] = record
         clientSocket.send(bytes("Customer has been added", 'utf-8'))
 
 
-def deleteCustomer():
-    lineToBeDeleted = ""
+def deleteCustomer(argument):
 
     if customerExists():
-        f = open("data.txt", "w")
-        for line in Lines:
-            if line.strip("\n") != lineToBeDeleted:
-                f.write(line)
+        del dictRecord[listData[1]]
         clientSocket.send(bytes("Customer has been deleted", 'utf-8'))
     else:
         clientSocket.send(bytes("Customer already exists", 'utf-8'))
 
 
-def updateAge():
+def update(argument):
+
+    tempDict = {}
     if customerExists():
-        f = open('data.txt', 'w')
-        for line in Lines:
-            listLine = line.split('|')
-            if listLine[0].strip() == listData[1].strip() and listData[2] != "":
-                listLine[1] = listData[2]
-                record = ""
-                i = 0
-                while i < len(listLine) - 1:
-                    record = record + listLine[i] + "|"
-                    i += 1
-                record += listLine[len(listLine) - 1]
-                f.write(record)
-            else:
-                f.write(line)
+        data = dictRecord[listData[1]]
+        tempList = data.split('|')
+        if argument == 4:
+            tempList[0] = listData[2]
+        elif argument == 5:
+            tempList[1] = listData[2]
+        elif argument == 6:
+            tempList[2] = listData[2]
+        record = ""
+        i = 0
+        while i < len(tempList) - 1:
+            record = record + tempList[i] + "|"
+            i += 1
+        record += tempList[len(tempList) - 1]
+        tempDict[listData[1]] = record
+        dictRecord.update(tempDict)
+        print(dictRecord)
         clientSocket.send(bytes("Customer has been updated", 'utf-8'))
     else:
         clientSocket.send(bytes("Customer not found", 'utf-8'))
 
 
-def updateAddress():
-    if customerExists():
+def printReport(argument):
+    clientSocket.send(bytes(str(len(dictRecord)), 'utf-8'))
 
-        f = open('data.txt', 'w')
-        for line in Lines:
-            listLine = line.split('|')
-            if listLine[0].strip() == listData[1].strip() and listData[2] != "":
-                listLine[2] = listData[2]
-                record = ""
-                i = 0
-                while i < len(listLine) - 1:
-                    record = record + listLine[i] + "|"
-                    i += 1
-                record += listLine[len(listLine) - 1]
-                f.write(record)
-            else:
-                f.write(line)
-        clientSocket.send(bytes("Customer has been updated", 'utf-8'))
-    else:
-        clientSocket.send(bytes("Customer not found", 'utf-8'))
-
-
-def updatePhone():
-    if customerExists():
-
-        f = open('data.txt', 'w')
-        for line in Lines:
-            listLine = line.split('|')
-            if listLine[0].strip() == listData[1].strip() and listData[2] != "":
-                listLine[3] = listData[2]
-                record = ""
-                i = 0
-                while i < len(listLine) - 1:
-                    record = record + listLine[i] + "|"
-                    i += 1
-                record += listLine[len(listLine) - 1]
-                f.write(record)
-            else:
-                f.write(line)
-
-        clientSocket.send(bytes("Customer has been updated", 'utf-8'))
-    else:
-        clientSocket.send(bytes("Customer not found", 'utf-8'))
-
-
-def printReport():
-    return "print"
+    for key in sorted(dictRecord):
+        record = key + "|" + dictRecord[key]
+        print(record)
+        clientSocket.send(bytes(record, 'utf-8'))
 
 
 def serverSwitchMenu(argument):
@@ -134,13 +98,13 @@ def serverSwitchMenu(argument):
         1: findCustomer,
         2: addCustomer,
         3: deleteCustomer,
-        4: updateAge,
-        5: updateAddress,
-        6: updatePhone,
+        4: update,
+        5: update,
+        6: update,
         7: printReport
     }
     function = switcher.get(argument, lambda: 'invalid')
-    function()
+    function(argument)
 
 
 while True:
