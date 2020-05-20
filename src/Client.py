@@ -2,12 +2,13 @@ import socket
 
 clientSocket = socket.socket()
 
-clientSocket.connect(('localhost', 9999))
+clientSocket.connect(('localhost', 5555))
 
 print(clientSocket.recv(1024).decode())
 
 
 def printMenu():
+    print("----------------------------------------------------------------------------------------------------")
     print("\nPython DB Menu\n")
     print("1. Find customer")
     print("2. Add customer")
@@ -19,49 +20,102 @@ def printMenu():
     print("8. Exit\n")
     print("Select:")
 
-    return int(input())
+    while True:
+        choosenOption = input().strip()
+        if choosenOption.isdigit() and 0 < int(choosenOption) < 9:
+            return int(choosenOption)
+        else:
+            print("ERROR: PLEASE ENTER VALID OPTION BETWEEN 1 TO 8.")
+
+
+def inputName():
+    while True:
+        name = input("Enter Name of Customer: ")
+        if name == "":
+            print("ERROR: NAME FIELD IS MANDATORY. PLEASE GO TO MAIN MENU.")
+            return "invalid"
+        else:
+            return name
 
 
 def findCustomer():
     print("\nFIND CUSTOMER\n")
-    name = input("Enter Name of Customer: ")
-    return name
+
+    while True:
+        name = input("Enter Name of Customer: ")
+        if name != "":
+            return name.strip()
+        else:
+            print("ERROR: NAME IS MANDATORY FIELD. PLEASE GO TO MAIN MENU.")
+            return "invalid"
 
 
 def addCustomer():
     print("\nADD CUSTOMER\n")
-    name = input("Enter Name of Customer: ")
-    age = input("Enter Age of Customer: ")
+
+    name = inputName()
+    if name == "invalid":
+        return name
+    while True:
+        age = input("Enter Age of Customer: ")
+        if age == "":
+            break
+        else:
+            if age.isdigit():
+                break
+            else:
+                print("ERROR: PLEASE ENTER VALID AGE.\n")
     address = input("Enter Address of Customer: ")
     phone = input("Enter Phone Number of Customer: ")
-    return name + "|" + age + "|" + address + "|" + phone
+    return name.strip() + "|" + str(age) + "|" + address.strip() + "|" + phone.strip()
 
 
 def deleteCustomer():
     print("\nDELETE CUSTOMER\n")
-    name = input("Enter Name of Customer")
-    return name
+
+    while True:
+        name = input("Enter Name of Customer: ")
+        if name != "":
+            return name.strip()
+        else:
+            print("ERROR: NAME FIELD IS MANDATORY. PLEASE GO TO MAIN MENU.")
+            return "invalid"
 
 
 def updateAge():
     print("\nUPDATE AGE\n")
-    name = input("Enter Name of Customer")
-    age = input("Enter Age of Customer")
-    return name + "|" + age
+
+    name = inputName()
+    if name == "invalid":
+        return name
+    while True:
+        age = input("Enter Age of Customer: ")
+        if age == "":
+            break
+        else:
+            if age.isdigit():
+                break
+            else:
+                print("ERROR: PLEASE ENTER VALID AGE.\n")
+    return name.strip() + "|" + str(age)
 
 
 def updateAddress():
     print("\nUPDATE ADDRESS\n")
-    name = input("Enter Name of Customer")
-    address = input("Enter Address of customer")
-    return name + "|" + address
+    name = inputName()
+    if name == "invalid":
+        return name
+    address = input("Enter Address of customer: ")
+    return name.strip() + "|" + address.strip()
 
 
 def updatePhone():
     print("\nUPDATE PHONE\n")
-    name = input("Enter Name of Customer")
-    phone = input("Enter Phone Number of Customer")
-    return name + "|" + phone
+    name = inputName()
+    if name == "invalid":
+        return name
+    phone = input("Enter Phone Number of Customer: ")
+    return name.strip() + "|" + phone.strip()
 
 
 def printReport():
@@ -78,7 +132,7 @@ def switchMenu(argument):
         6: updatePhone,
         7: printReport
     }
-    function = switcher.get(argument, lambda : 'invalid')
+    function = switcher.get(argument, lambda: 'invalid')
     return function()
 
 
@@ -86,13 +140,22 @@ option = printMenu()
 
 while 0 < option < 8:
     data = switchMenu(option)
-    clientSocket.send(bytes(str(option) + "|" + data, 'utf-8'))
-    if option == 7:
-        length = int(clientSocket.recv(4096).decode())
-        while length > 0:
-            record = clientSocket.recv(4096).decode()
-            print(record)
-            length -= 1
-    else:
-        print(clientSocket.recv(4096).decode())
+    if data != "invalid":
+        clientSocket.send(bytes(str(option) + "|" + data, 'utf-8'))
+        if option == 7:
+            #length = int(clientSocket.recv(1024).decode())
+            print("---------------------------------------------------------------------------------------------------")
+            print("                                         REPORT                                                    ")
+            print("---------------------------------------------------------------------------------------------------")
+            data = clientSocket.recv(4096).decode()
+            listOfRecords = data.split(',')
+            for record in listOfRecords:
+                if record:
+                    individualRecord = record.split('|')
+                    print("NAME: ", individualRecord[0], "|", "AGE: ", individualRecord[1], "|", "ADDRESS: ",
+                          individualRecord[2], "|", "PHONE: ", individualRecord[3])
+        else:
+            print(clientSocket.recv(4096).decode())
     option = printMenu()
+
+print("THANK YOU..... GOOD BYE.....")

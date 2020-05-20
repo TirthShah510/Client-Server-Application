@@ -3,7 +3,7 @@ import socket
 serverSocket = socket.socket()
 print("Server Socket created")
 
-serverSocket.bind(('localhost', 9999))
+serverSocket.bind(('localhost', 5555))
 
 serverSocket.listen()
 print("Waiting for Client Connection")
@@ -16,7 +16,6 @@ for line in Lines:
     if listLine[0]:
         dictRecord[listLine[0]] = line[(len(listLine[0]) + 1):].strip()
 
-print(dictRecord)
 
 
 def customerExists():
@@ -55,7 +54,7 @@ def deleteCustomer(argument):
         del dictRecord[listData[1]]
         clientSocket.send(bytes("Customer has been deleted", 'utf-8'))
     else:
-        clientSocket.send(bytes("Customer already exists", 'utf-8'))
+        clientSocket.send(bytes("Customer Not Found", 'utf-8'))
 
 
 def update(argument):
@@ -85,12 +84,13 @@ def update(argument):
 
 
 def printReport(argument):
-    clientSocket.send(bytes(str(len(dictRecord)), 'utf-8'))
 
-    for key in sorted(dictRecord):
-        record = key + "|" + dictRecord[key]
-        print(record)
-        clientSocket.send(bytes(record, 'utf-8'))
+    record = ""
+    for key in sorted(dictRecord.keys()):
+        record += key + "|" + dictRecord[key] + ","
+
+    clientSocket.sendall(bytes(record, 'utf-8'))
+
 
 
 def serverSwitchMenu(argument):
@@ -108,11 +108,15 @@ def serverSwitchMenu(argument):
 
 
 while True:
-    clientSocket, clientAddress = serverSocket.accept()
-    print("Connected with ", clientAddress)
-    clientSocket.send(bytes("Hello Client", 'utf-8'))
-    data = clientSocket.recv(4096).decode()
-    while data:
-        listData = data.split('|')
-        serverSwitchMenu(int(listData[0]))
+    try:
+        clientSocket, clientAddress = serverSocket.accept()
+        print("Connected with ", clientAddress)
+        clientSocket.send(bytes("Hello Client", 'utf-8'))
         data = clientSocket.recv(4096).decode()
+        while data:
+            listData = data.split('|')
+            serverSwitchMenu(int(listData[0]))
+            data = clientSocket.recv(4096).decode()
+    except socket.error:
+        print("An existing connection was forcibly closed by the client")
+
