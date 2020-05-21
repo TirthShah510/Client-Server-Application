@@ -147,7 +147,6 @@ while 0 < option < 8:
         if data != "invalid":
             clientSocket.send(bytes(str(option) + "|" + data, 'utf-8'))
             if option == 7:
-                #length = int(clientSocket.recv(1024).decode())
                 print("-----------------------------------------------------------------------------------------------")
                 print("                                         REPORT                                                ")
                 print("-----------------------------------------------------------------------------------------------")
@@ -158,6 +157,14 @@ while 0 < option < 8:
                         individualRecord = record.split('|')
                         print("NAME: ", individualRecord[0].strip(), "|", "AGE: ", individualRecord[1].strip(), "|",
                               "ADDRESS: ", individualRecord[2].strip(), "|", "PHONE: ", individualRecord[3].strip())
+            elif option == 1:
+                data = clientSocket.recv(4096).decode()
+                if data == "Customer not found":
+                    print(data)
+                else:
+                    listRecord = data.split('|')
+                    print("NAME: ", listRecord[0].strip(), "|", "AGE: ", listRecord[1].strip(), "|",
+                          "ADDRESS: ", listRecord[2].strip(), "|", "PHONE: ", listRecord[3].strip())
             else:
                 print(clientSocket.recv(4096).decode())
         option = printMenu()
