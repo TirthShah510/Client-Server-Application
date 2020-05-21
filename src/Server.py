@@ -17,7 +17,6 @@ for line in Lines:
         dictRecord[listLine[0]] = line[(len(listLine[0]) + 1):].strip()
 
 
-
 def customerExists():
     if listData[1] in dictRecord:
         return True
@@ -77,7 +76,6 @@ def update(argument):
         record += tempList[len(tempList) - 1]
         tempDict[listData[1]] = record
         dictRecord.update(tempDict)
-        print(dictRecord)
         clientSocket.send(bytes("Customer has been updated", 'utf-8'))
     else:
         clientSocket.send(bytes("Customer not found", 'utf-8'))
@@ -90,7 +88,6 @@ def printReport(argument):
         record += key + "|" + dictRecord[key] + ","
 
     clientSocket.sendall(bytes(record, 'utf-8'))
-
 
 
 def serverSwitchMenu(argument):
@@ -118,5 +115,5 @@ while True:
             serverSwitchMenu(int(listData[0]))
             data = clientSocket.recv(4096).decode()
     except socket.error:
-        print("An existing connection was forcibly closed by the client")
+        print("An existing connection was forcibly closed by the client.")
 

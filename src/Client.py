@@ -2,9 +2,12 @@ import socket
 
 clientSocket = socket.socket()
 
-clientSocket.connect(('localhost', 5555))
+try:
+    clientSocket.connect(('localhost', 5555))
 
-print(clientSocket.recv(1024).decode())
+    print(clientSocket.recv(1024).decode())
+except socket.error:
+    print("Server is not active. No request will be forwarded to server.")
 
 
 def printMenu():
@@ -18,9 +21,9 @@ def printMenu():
     print("6. Update customer phone")
     print("7. Print report")
     print("8. Exit\n")
-    print("Select:")
 
     while True:
+        print("Select:")
         choosenOption = input().strip()
         if choosenOption.isdigit() and 0 < int(choosenOption) < 9:
             return int(choosenOption)
@@ -139,23 +142,27 @@ def switchMenu(argument):
 option = printMenu()
 
 while 0 < option < 8:
-    data = switchMenu(option)
-    if data != "invalid":
-        clientSocket.send(bytes(str(option) + "|" + data, 'utf-8'))
-        if option == 7:
-            #length = int(clientSocket.recv(1024).decode())
-            print("---------------------------------------------------------------------------------------------------")
-            print("                                         REPORT                                                    ")
-            print("---------------------------------------------------------------------------------------------------")
-            data = clientSocket.recv(4096).decode()
-            listOfRecords = data.split(',')
-            for record in listOfRecords:
-                if record:
-                    individualRecord = record.split('|')
-                    print("NAME: ", individualRecord[0], "|", "AGE: ", individualRecord[1], "|", "ADDRESS: ",
-                          individualRecord[2], "|", "PHONE: ", individualRecord[3])
-        else:
-            print(clientSocket.recv(4096).decode())
-    option = printMenu()
+    try:
+        data = switchMenu(option)
+        if data != "invalid":
+            clientSocket.send(bytes(str(option) + "|" + data, 'utf-8'))
+            if option == 7:
+                #length = int(clientSocket.recv(1024).decode())
+                print("-----------------------------------------------------------------------------------------------")
+                print("                                         REPORT                                                ")
+                print("-----------------------------------------------------------------------------------------------")
+                data = clientSocket.recv(4096).decode()
+                listOfRecords = data.split(',')
+                for record in listOfRecords:
+                    if record:
+                        individualRecord = record.split('|')
+                        print("NAME: ", individualRecord[0].strip(), "|", "AGE: ", individualRecord[1].strip(), "|",
+                              "ADDRESS: ", individualRecord[2].strip(), "|", "PHONE: ", individualRecord[3].strip())
+            else:
+                print(clientSocket.recv(4096).decode())
+        option = printMenu()
+    except socket.error:
+        print("An existing connection was forcibly closed by the server.")
+        break
 
 print("THANK YOU..... GOOD BYE.....")
